@@ -56,11 +56,16 @@ type OldPath struct {
 }
 
 func (o OldPath) ToNewPath() NewPath {
-	return NewPath{
+	np := NewPath{
 		Path:     o.Path,
 		PathType: "ImplementationSpecific",
 		Backend:  o.Backend.ToNewBackend(),
 	}
+	if np.Backend.Service.Name == "ssl-redirect" {
+		np.Path = "/"
+		np.PathType = "Prefix"
+	}
+	return np
 }
 
 type OldHttp struct {
