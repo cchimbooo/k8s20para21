@@ -4,7 +4,7 @@ import "gopkg.in/yaml.v3"
 
 type NewPort struct {
 	Name   string `yaml:"name,omitempty"`
-	Number string `yaml:"number,omitempty"`
+	Number int    `yaml:"number,omitempty"`
 }
 
 type NewService struct {

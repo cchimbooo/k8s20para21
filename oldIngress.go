@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 func (i IngressStruct) ConverterParaNovo() NewIngress {
 	n := NewIngress{
 		ApiVersion: "networking.k8s.io/v1",
@@ -33,14 +35,19 @@ func (o OldBackend) ToNewBackend() NewBackend {
 			},
 		}
 	}
-	return NewBackend{
+	nw := NewBackend{
 		Service: NewService{
 			Name: o.ServiceName,
-			Port: NewPort{
-				Number: o.ServicePort,
-			},
+			Port: NewPort{},
 		},
 	}
+	num, err := strconv.Atoi(o.ServicePort)
+	if err != nil {
+		panic(err)
+	}
+
+	nw.Service.Port.Number = num
+	return nw
 }
 
 type OldPath struct {
