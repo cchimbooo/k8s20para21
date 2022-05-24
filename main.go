@@ -57,7 +57,7 @@ func atualizardeploy(path string) {
 	// Le o arquivo
 	for {
 		// create new spec here
-		spec := map[string]interface{}{}
+		spec := yaml.MapSlice{}
 		// pass a reference to spec reference
 		errDecode := d.Decode(&spec)
 		// check it was parsed
@@ -86,6 +86,7 @@ func atualizardeploy(path string) {
 			if e2 != nil {
 				panic(e2)
 			}
+
 		}
 		fileContent = append(fileContent, concatenate(bYaml)...)
 
@@ -111,20 +112,35 @@ func writeToFile(bYaml []byte, path string) {
 
 }
 
-func validaSeConverteIngress(b map[string]interface{}) bool {
-	valor, existe := b["apiVersion"]
-	if !existe || valor != "extensions/v1beta1" {
-		return false
-	}
-	valor, existe = b["kind"]
-	if !existe || valor != "Ingress" {
-		return false
-	}
+func validaSeConverteIngress(b yaml.MapSlice) bool {
 
-	return true
+	apiVersion := false
+	kind := false
+	for _, v := range b {
+		switch v.Key.(type) {
+		case string:
+			if v.Key.(string) == "apiVersion" {
+				switch v.Value.(type) {
+				case string:
+					if v.Value.(string) == "extensions/v1beta1" {
+						apiVersion = true
+					}
+				}
+			}
+			if v.Key.(string) == "kind" {
+				switch v.Value.(type) {
+				case string:
+					if v.Value.(string) == "Ingress" {
+						kind = true
+					}
+				}
+			}
+		}
+	}
+	return apiVersion && kind
 }
 
-func mapaParaStructIngress(b map[string]interface{}) (IngressStruct, error) {
+func mapaParaStructIngress(b yaml.MapSlice) (IngressStruct, error) {
 	i := IngressStruct{}
 
 	m, e := yaml.Marshal(b)
