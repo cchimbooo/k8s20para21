@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 )
 
@@ -52,6 +54,7 @@ func atualizardeploy(path string) {
 	if err != nil {
 		panic(err)
 	}
+
 	d := yaml.NewDecoder(f)
 	var fileContent []byte
 	// Le o arquivo
@@ -74,7 +77,6 @@ func atualizardeploy(path string) {
 		if err != nil {
 			panic(err.Error())
 		}
-
 		if validaSeConverteIngress(spec) {
 			oldIngres, errCast := mapaParaStructIngress(spec)
 			if errCast != nil {
@@ -94,7 +96,9 @@ func atualizardeploy(path string) {
 			panic(err)
 		}
 	}
-	writeToFile(fileContent, path)
+	arquivoxuxado := fincaString(removeNull(fileContent))
+	fmt.Println(string(arquivoxuxado))
+	writeToFile(arquivoxuxado, path)
 	check(fileContent)
 }
 
@@ -111,6 +115,48 @@ func writeToFile(bYaml []byte, path string) {
 	}
 
 }
+
+/*func xuxaConfigMap(b yaml.MapSlice) yaml.MapSlice {
+    alterar := false
+    for _, v := range b {
+        switch v.Key.(type) {
+        case string:
+            if v.Key.(string) == "kind" {
+                switch v.Value.(type) {
+                case string:
+                    if v.Value.(string) == "ConfigMap" {
+                        alterar = true
+                    }
+                }
+            }
+        }
+    }
+    if alterar {
+        for k1, v := range b {
+            switch v.Key.(type) {
+            case string:
+                if v.Key.(string) == "data" {
+                    switch v.Value.(type) {
+                    case yaml.MapSlice:
+                        ms := v.Value.(yaml.MapSlice)
+                        for k2, item := range ms {
+                            switch item.Value.(type) {
+                            case string:
+
+                                s := "\"" + item.Value.(string) + "\""
+                                var i interface{}
+                                i = s
+                                b[k1].Value.(yaml.MapSlice)[k2].Value = i
+                                fmt.Println(b[k1].Value.(yaml.MapSlice)[k2].Value)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return b
+}*/
 
 func validaSeConverteIngress(b yaml.MapSlice) bool {
 
@@ -187,4 +233,34 @@ func check(b []byte) {
 		}
 		time.Sleep(600 * time.Second)
 	}
+}
+
+func fincaString(b []byte) []byte {
+	exp := "(\\$\\{.*\\})"
+	r, err := regexp.Compile(exp)
+	if err != nil {
+		panic(err)
+	}
+	k := r.FindAll(b, -1)
+	spew.Dump(k)
+	nw := r.ReplaceAllFunc(
+		b, func(i []byte) []byte {
+			nb := make([]byte, len(i)+2)
+			nb[0] = '"'
+			for k, v := range i {
+				nb[k+1] = v
+			}
+			nb[len(i)+1] = '"'
+			return nb
+		},
+	)
+	return nw
+}
+
+func removeNull(b []byte) []byte {
+	r, err := regexp.Compile(`(null)`)
+	if err != nil {
+		panic(err)
+	}
+	return r.ReplaceAll(b, []byte{})
 }

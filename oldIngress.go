@@ -30,7 +30,7 @@ func (o OldBackend) ToNewBackend() NewBackend {
 			Service: NewService{
 				Name: "ssl-redirect",
 				Port: NewPort{
-					Name: o.ServiceName,
+					Name: o.ServicePort,
 				},
 			},
 		}
