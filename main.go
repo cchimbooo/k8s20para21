@@ -32,7 +32,7 @@ func visit(path string, fi os.FileInfo, err error) error {
 		return nil //
 	}
 
-	matched, err := filepath.Match("deploy*.yaml", fi.Name())
+	matched, err := filepath.Match("deploy-staging.yaml", fi.Name())
 
 	if err != nil {
 		panic(err)
